@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uploaded Files</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            margin: 20px 0;
+        }
+        table {
+            width: 80%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        td {
+            text-align: left;
+        }
+        .file-link {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .file-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Uploaded Files</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>File Name</th>
+                <th>Upload Timestamp</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+        <tbody id="file-list">
+            <!-- Uploaded files will be listed here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Fetch the list of uploaded files and their timestamps from the server
+        fetch("/api/files")
+            .then(response => response.json())
+            .then(data => {
+                const fileListContainer = document.getElementById("file-list");
+
+                if (data.files && data.files.length > 0) {
+                    data.files.forEach(file => {
+                        const row = document.createElement("tr");
+
+                        const studentIDCell = document.createElement("td");
+                        studentIDCell.textContent = file.submitterID;
+
+                        const fileNameCell = document.createElement("td");
+                        fileNameCell.textContent = file.filename;
+
+                        const timestampCell = document.createElement("td");
+                        timestampCell.textContent = file.timestamp;
+
+                        const downloadCell = document.createElement("td");
+                        const downloadLink = document.createElement("a");
+                        downloadLink.classList.add("file-link");
+                        downloadLink.href = `/uploads/${file.filename}`;
+                        downloadLink.target = "_blank";
+                        downloadLink.textContent = "Download";
+
+                        downloadCell.appendChild(downloadLink);
+
+                        row.appendChild(studentIDCell);
+                        row.appendChild(fileNameCell);
+                        row.appendChild(timestampCell);
+                        row.appendChild(downloadCell);
+
+                        fileListContainer.appendChild(row);
+                    });
+                } else {
+                    fileListContainer.innerHTML = "<tr><td colspan='4'>No files uploaded yet.</td></tr>";
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching files:", error);
+                const fileListContainer = document.getElementById("file-list");
+                fileListContainer.innerHTML = "<tr><td colspan='3'>Error loading files.</td></tr>";
+            });
+    </script>
+</body>
+</html>

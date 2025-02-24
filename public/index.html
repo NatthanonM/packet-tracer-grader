@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #upload-box {
+            border: 2px dashed #aaa;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        #time-ip {
+            position: absolute;
+            bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>File Upload Page</h1>
+    <!-- Input box for submitterID -->
+    <input type="text" id="submitterID" placeholder="Enter student ID" />
+    
+    <div id="upload-box" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)">
+        <p>Drag & Drop a file here or</p>
+        <input type="file" id="file-input">
+    </div>
+    <button onclick="uploadFile()">Upload</button>
+    
+    <div id="time-ip">
+        <p id="time">Loading time...</p>
+        <p id="ip">Fetching IP...</p>
+    </div>
+
+    <script>
+        function updateTime() {
+            document.getElementById("time").innerText = "Current Time: " + new Date().toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        fetch("https://api64.ipify.org?format=json")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("ip").innerText = "Your IP: " + data.ip;
+            })
+            .catch(() => {
+                document.getElementById("ip").innerText = "Could not fetch IP";
+            });
+
+        function dragOverHandler(event) {
+            event.preventDefault();
+        }
+        
+        function dropHandler(event) {
+            event.preventDefault();
+            const files = event.dataTransfer.files;
+            document.getElementById("file-input").files = files;
+        }
+        
+        function uploadFile() {
+            const fileInput = document.getElementById("file-input");
+            const submitterID = document.getElementById("submitterID").value; // Updated name
+
+            if (fileInput.files.length === 0) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            if (!submitterID) {
+                alert("Submitter ID cannot be empty.");
+                return;
+            }
+
+            const fileName = fileInput.files[0].name.split('.')[0]; // Get the name without extension
+
+            if (fileName !== submitterID) {
+                alert("The file name and student ID must be the same.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            formData.append("submitterID", submitterID);  // Changed field name to submitterID
+            
+            fetch("/api/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("File uploaded: " + data.filename);
+            })
+            .catch(error => {
+                alert("Upload failed");
+                console.error(error);
+            });
+        }
+    </script>
+</body>
+</html>
